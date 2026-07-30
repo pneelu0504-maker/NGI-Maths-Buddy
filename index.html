@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NGI Maths Buddy</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(135deg, #ff9ff3, #feca57, #1dd1a1, #54a0ff);
+      background-size: 400% 400%;
+      animation: bgMove 10s infinite alternate;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: left top; }
+      100% { background-position: right bottom; }
+    }
+
+    .app {
+      width: 90%;
+      max-width: 500px;
+      background: white;
+      border-radius: 25px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      color: #ff6b6b;
+      font-size: 2em;
+    }
+
+    .emoji {
+      font-size: 50px;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+
+    .question {
+      font-size: 2em;
+      margin: 20px 0;
+      color: #333;
+    }
+
+    input {
+      width: 120px;
+      padding: 10px;
+      font-size: 1.5em;
+      text-align: center;
+      border-radius: 10px;
+      border: 2px solid #54a0ff;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 25px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 15px;
+      background: #1dd1a1;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #10ac84;
+      transform: scale(1.05);
+    }
+
+    .score {
+      margin-top: 15px;
+      font-size: 1.3em;
+      color: #5f27cd;
+      font-weight: bold;
+    }
+
+    .task {
+      margin-top: 20px;
+      background: #f1f2f6;
+      border-radius: 15px;
+      padding: 10px;
+      font-size: 1em;
+      color: #2f3542;
+    }
+
+    .footer {
+      margin-top: 15px;
+      color: #888;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="emoji">🧮🌈</div>
+  <h1>NGI Maths Buddy</h1>
+
+  <div class="task" id="dailyTask">📅 Loading Daily Task...</div>
+
+  <div class="question" id="question">1 + 1</div>
+
+  <input type="number" id="answer" placeholder="?" />
+  <br>
+  <button onclick="checkAnswer()">Check Answer ✅</button>
+
+  <div class="score" id="score">⭐ Score: 0 / 30</div>
+
+  <div class="footer">
+    NGI Academy • Preschool Maths Fun 🎈
+  </div>
+</div>
+
+<script>
+  let num1, num2, operator, correctAnswer;
+  let score = 0;
+  let answered = 0;
+
+  const operators = ['+', '-', '×', '÷'];
+
+  function generateQuestion() {
+    operator = operators[Math.floor(Math.random() * operators.length)];
+
+    if (operator === '+') {
+      num1 = Math.floor(Math.random() * 20) + 1;
+      num2 = Math.floor(Math.random() * 20) + 1;
+      correctAnswer = num1 + num2;
+    }
+
+    if (operator === '-') {
+      num1 = Math.floor(Math.random() * 20) + 10;
+      num2 = Math.floor(Math.random() * 10) + 1;
+      correctAnswer = num1 - num2;
+    }
+
+    if (operator === '×') {
+      num1 = Math.floor(Math.random() * 10) + 1;
+      num2 = Math.floor(Math.random() * 10) + 1;
+      correctAnswer = num1 * num2;
+    }
+
+    if (operator === '÷') {
+      num2 = Math.floor(Math.random() * 9) + 1;
+      correctAnswer = Math.floor(Math.random() * 10) + 1;
+      num1 = num2 * correctAnswer;
+    }
+
+    document.getElementById('question').innerText =
+      `${num1} ${operator} ${num2}`;
+    document.getElementById('answer').value = '';
+  }
+
+  function playCheer() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(523, ctx.currentTime);
+    osc.frequency.setValueAtTime(659, ctx.currentTime + 0.15);
+    osc.frequency.setValueAtTime(784, ctx.currentTime + 0.3);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  }
+
+  function playBuzzer() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  }
+
+  function checkAnswer() {
+    const userAnswer = parseInt(document.getElementById('answer').value);
+
+    if (userAnswer === correctAnswer) {
+      score++;
+      playCheer();
+      alert('🎉 Correct! Great Job!');
+    } else {
+      playBuzzer();
+      alert(`😢 Wrong! Correct answer is ${correctAnswer}`);
+    }
+
+    answered++;
+
+    document.getElementById('score').innerText =
+      `⭐ Score: ${score} / ${answered}`;
+
+    if (answered >= 30) {
+      alert(`🏆 Daily Task Finished! Your Score: ${score}/30`);
+      answered = 0;
+      score = 0;
+    }
+
+    generateQuestion();
+  }
+
+  function loadDailyTask() {
+    const start = new Date(2026, 0, 1);
+    const today = new Date();
+    const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    const dayNumber = (diff % 365) + 1;
+
+    document.getElementById('dailyTask').innerText =
+      `📅 Day ${dayNumber} • Complete 30 colourful maths questions today! 🌟`;
+  }
+
+  loadDailyTask();
+  generateQuestion();
+</script>
+
+</body>
+</html>
