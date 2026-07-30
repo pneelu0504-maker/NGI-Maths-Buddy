@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NGI Maths Buddy</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(135deg,#ff9ff3,#feca57,#1dd1a1,#54a0ff,#ff6b6b);
+      background-size: 500% 500%;
+      animation: rainbow 12s infinite alternate;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    @keyframes rainbow {
+      0% {background-position: 0% 50%;}
+      100% {background-position: 100% 50%;}
+    }
+
+    .card {
+      width: 95%;
+      max-width: 450px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 30px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      color: #ff4081;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #555;
+      margin-bottom: 15px;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .menu button {
+      padding: 12px;
+      border: none;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+    }
+
+    .abacus {background:#ff6b6b;}
+    .add {background:#ff9f43;}
+    .sub {background:#54a0ff;}
+    .mul {background:#10ac84;}
+    .div {background:#f368e0;}
+    .daily {background:#6c5ce7;}
+
+    .question {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #333;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 12px;
+    }
+
+    .answer-btn {
+      padding: 16px;
+      border: none;
+      border-radius: 18px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+    }
+
+    .b1 {background:#ff6b6b;}
+    .b2 {background:#feca57;}
+    .b3 {background:#54a0ff;}
+    .b4 {background:#1dd1a1;}
+
+    #result {
+      margin-top: 18px;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    #score, #progress {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>🌈 NGI Maths Buddy 🧮</h1>
+    <div class="subtitle">Fun Play Maths for Preschool Kids 🎈</div>
+
+    <div class="menu">
+      <button class="abacus" onclick="setMode('abacus')">🧮 Abacus</button>
+      <button class="add" onclick="setMode('add')">➕ Addition</button>
+      <button class="sub" onclick="setMode('sub')">➖ Subtraction</button>
+      <button class="mul" onclick="setMode('mul')">✖️ Multiplication</button>
+      <button class="div" onclick="setMode('div')">➗ Division</button>
+      <button class="daily" onclick="startDailyTask()">📅 Daily 30 Tasks</button>
+    </div>
+
+    <div class="question" id="question">2 + 3 = ?</div>
+
+    <div class="options" id="options">
+      <button class="answer-btn b1" onclick="checkAnswer(this)">4</button>
+      <button class="answer-btn b2" onclick="checkAnswer(this)">5</button>
+      <button class="answer-btn b3" onclick="checkAnswer(this)">6</button>
+      <button class="answer-btn b4" onclick="checkAnswer(this)">7</button>
+    </div>
+
+    <div id="result"></div>
+    <div id="score">⭐ Score: 0</div>
+    <div id="progress">📘 Practice Mode</div>
+  </div>
+
+  <audio id="correctSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=success-fanfare-trumpets-6185.mp3"></audio>
+
+  <audio id="wrongSound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_2b2d94c8d0.mp3?filename=wrong-answer-129254.mp3"></audio>
+
+  <script>
+    let correct = 0;
+    let score = 0;
+    let mode = 'add';
+    let dailyMode = false;
+    let questionNumber = 1;
+    const totalQuestions = 30;
+
+    function setMode(m) {
+      dailyMode = false;
+      questionNumber = 1;
+      mode = m;
+      document.getElementById('progress').innerHTML = '📘 ' + m.toUpperCase() + ' Practice';
+      newQuestion();
+    }
+
+    function startDailyTask() {
+      dailyMode = true;
+      questionNumber = 1;
+      score = 0;
+      document.getElementById('score').innerHTML = '⭐ Score: 0';
+      randomDailyMode();
+      updateProgress();
+      newQuestion();
+    }
+
+    function randomDailyMode() {
+      const modes = ['abacus','add','sub','mul','div'];
+      mode = modes[Math.floor(Math.random()*modes.length)];
+    }
+
+    function updateProgress() {
+      if (dailyMode) {
+        document.getElementById('progress').innerHTML =
+          `📅 Daily Task: ${questionNumber} / ${totalQuestions}`;
+      }
+    }
+
+    function newQuestion() {
+      let a,b,symbol;
+
+      if (mode==='abacus') {
+        a = Math.floor(Math.random()*9)+1;
+        b = Math.floor(Math.random()*9)+1;
+        correct = a+b;
+        symbol = '🧮 +';
+      }
+
+      if (mode==='add') {
+        a = Math.floor(Math.random()*20)+1;
+        b = Math.floor(Math.random()*20)+1;
+        correct = a+b;
+        symbol = '+';
+      }
+
+      if (mode==='sub') {
+        a = Math.floor(Math.random()*20)+1;
+        b = Math.floor(Math.random()*20)+1;
+        if (a < b) [a,b] = [b,a];
+        correct = a-b;
+        symbol = '−';
+      }
+
+      if (mode==='mul') {
+        a = Math.floor(Math.random()*10)+1;
+        b = Math.floor(Math.random()*10)+1;
+        correct = a*b;
+        symbol = '×';
+      }
+
+      if (mode==='div') {
+        b = Math.floor(Math.random()*9)+1;
+        correct = Math.floor(Math.random()*9)+1;
+        a = b * correct;
+        symbol = '÷';
+      }
+
+      document.getElementById('question').innerHTML = `${a} ${symbol} ${b} = ?`;
+      document.getElementById('result').innerHTML = '';
+
+      let answers = [correct];
+      while (answers.length < 4) {
+        let n = correct + Math.floor(Math.random()*10)-5;
+        if (n >= 0 && !answers.includes(n)) answers.push(n);
+      }
+
+      answers.sort(() => Math.random()-0.5);
+
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach((btn,i)=>btn.innerText = answers[i]);
+    }
+
+    function checkAnswer(btn) {
+      const value = parseInt(btn.innerText);
+
+      if (value===correct) {
+        document.getElementById('result').innerHTML = '🎉 Correct! Great Job!';
+        document.getElementById('correctSound').play();
+        score++;
+      } else {
+        document.getElementById('result').innerHTML = '😢 Wrong! Try Again';
+        document.getElementById('wrongSound').play();
+      }
+
+      document.getElementById('score').innerHTML = `⭐ Score: ${score}`;
+
+      if (dailyMode) {
+        if (questionNumber >= totalQuestions) {
+          setTimeout(() => {
+            document.getElementById('question').innerHTML = '🏆 Daily Task Completed!';
+            document.getElementById('result').innerHTML = `🎊 Final Score: ${score} / ${totalQuestions}`;
+            document.getElementById('progress').innerHTML = '🌟 Excellent Work Today!';
+          }, 1200);
+          return;
+        }
+
+        questionNumber++;
+        randomDailyMode();
+        updateProgress();
+      }
+
+      setTimeout(newQuestion, 1200);
+    }
+
+    setMode('abacus');
+  </script>
+
+</body>
+</html>
